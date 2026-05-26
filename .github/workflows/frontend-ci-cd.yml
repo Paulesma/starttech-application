@@ -1,40 +1,45 @@
 name: Frontend CI/CD
+
 on:
   push:
-    branches: [ main, feature/full-stack ] # Added your current branch
+    branches: [ main, feature/full-stack ]
     paths: [ 'frontend/**' ]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Required for Vite 7 / crypto.hash fix
-          
-      - name: Build and Deploy
-        working-directory: frontend # Cleaner way to handle the subfolder
+          node-version: '20'
+
+      - name: Install and Build
+        working-directory: frontend
         run: |
           npm install
           npm run build
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
+        env:
+          # This is critical so the React app knows where the API is
+          VITE_API_BASE_URL: http://${{ secrets.ALB_DNS }}
 
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/*"
-
+      - name: Deploy to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-      - name: Build React App
+          AWS_DEFAULT_REGION: us-east-1
         run: |
-          cd frontend
-          npm install
-          npm run build
-        env:
-          # This injects your AWS ALB URL into the React code
-          VITE_API_BASE_URL: http://${{ secrets.ALB_DNS }}
+          aws s3 sync frontend/dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
+      - name: Invalidate CloudFront Cache
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
+            --paths "/*"
