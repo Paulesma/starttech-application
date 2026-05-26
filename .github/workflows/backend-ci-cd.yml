@@ -1,7 +1,7 @@
 name: Backend CI/CD
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/full-stack ] # Added your current branch
     paths: [ 'backend/**' ]
 jobs:
   deploy:
@@ -9,25 +9,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Login to Amazon ECR
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Docker Image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      - name: Build and Push
         run: |
-          docker build -t $ECR_REGISTRY/starttech-backend:latest ./backend
-          docker push $ECR_REGISTRY/starttech-backend:latest
+          # Use a unique tag (the commit hash) instead of just 'latest' to avoid caching issues
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }} ./backend
+          docker tag ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest
+      - name: Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          
 
-      - name: Refresh Auto Scaling Group
+      - name: Update ASG
         run: |
+          # This command tells the ASG to replace its instances with new ones.
+          # IMPORTANT: Your ASG's UserData must contain 'docker pull' to get the latest image!
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name starttech-backend-asg
+            --auto-scaling-group-name starttech-backend-asg \
+            --preferences '{"MinHealthyPercentage": 50}'
