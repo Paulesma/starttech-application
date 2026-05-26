@@ -1,44 +1,64 @@
 name: Backend CI/CD
+
 on:
   push:
-    branches: [ main, feature/full-stack ] # Added your current branch
+    branches: [ main, feature/full-stack ]
     paths: [ 'backend/**' ]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and Push
+        id: build-image
         run: |
-          # Use a unique tag (the commit hash) instead of just 'latest' to avoid caching issues
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }} ./backend
-          docker tag ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest
-          docker push ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest
+          REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY=starttech-backend
+          IMAGE_TAG=${{ github.sha }}
+          
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./backend
+          docker tag $REGISTRY/$REPOSITORY:$IMAGE_TAG $REGISTRY/$REPOSITORY:latest
+          
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $REGISTRY/$REPOSITORY:latest
+          
+          # Output the image name for the next steps
+          echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
       - name: Security Scan (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ steps.login-ecr.outputs.registry }}/starttech-backend:latest'
+          image-ref: ${{ steps.build-image.outputs.image }}
           format: 'table'
           severity: 'CRITICAL,HIGH'
-          
 
-      - name: Update ASG
+      - name: Update Launch Template & Refresh ASG
         run: |
-          # This command tells the ASG to replace its instances with new ones.
-          # IMPORTANT: Your ASG's UserData must contain 'docker pull' to get the latest image!
+          # 1. Get the current Launch Template ID
+          LT_ID=$(aws ec2 describe-launch-templates --launch-template-names starttech-backend-lt --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
+          
+          # 2. Create a new version of the Launch Template with the new image tag in UserData
+          # Note: This assumes your Terraform setup uses a variable or tag for the image
+          aws ec2 create-launch-template-version \
+            --launch-template-id $LT_ID \
+            --source-version '$Latest' \
+            --launch-template-data "{\"ImageId\":\"ami-0e2c8ca38b22a30ed\"}" # Use your actual AMI ID
+            
+          # 3. Trigger the Refresh
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name starttech-backend-asg \
             --preferences '{"MinHealthyPercentage": 50}'
