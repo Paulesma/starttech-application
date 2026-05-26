@@ -25,4 +25,4 @@ Senior DevOps Assessment - CI/CD Pipeline Implementation.
 - **Rollback**: `./scripts/rollback.sh`
 
 ## 👨‍💻 Author
-[Eze Paul]
+[Eze Paul C]
