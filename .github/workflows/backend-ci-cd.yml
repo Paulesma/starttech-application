@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main, feature/full-stack ]
     paths: [ 'backend/**' ]
+  workflow_dispatch:  # <--- Add this exact line
+
 
 jobs:
   deploy:
