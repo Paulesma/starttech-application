@@ -48,18 +48,29 @@ jobs:
 
       - name: Update Launch Template & Refresh ASG
         run: |
-          # 1. Get the current Launch Template ID
-          LT_ID=$(aws ec2 describe-launch-templates --launch-template-names starttech-backend-lt --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
+          # 1. Get the Launch Template ID using your specific name
+          LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-          # 2. Create a new version of the Launch Template with the new image tag in UserData
-          # Note: This assumes your Terraform setup uses a variable or tag for the image
+          # 2. Encode the new UserData script to Base64 (Required for CLI)
+          # This script ensures the new instance pulls the exact image tag built in this run
+          USER_DATA=$(cat <<EOF | base64 -w 0
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y docker
+          sudo systemctl start docker
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          docker pull ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
+          docker run -d -p 80:8080 ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
+          EOF
+          )
+
+          # 3. Create a new version of the Launch Template with the updated UserData
           aws ec2 create-launch-template-version \
             --launch-template-id $LT_ID \
             --source-version '$Latest' \
-            --launch-template-data "{\"ImageId\":\"ami-0e2c8ca38b22a30ed\"}" # Use your actual AMI ID
+            --launch-template-data "{\"UserData\":\"$USER_DATA\"}"
             
-          # 3. Trigger the Refresh
+          # 4. Trigger the Refresh on your specific Auto Scaling Group
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name starttech-backend-asg \
+            --auto-scaling-group-name terraform-20260525134202399700000004 \
             --preferences '{"MinHealthyPercentage": 50}'
-# test
