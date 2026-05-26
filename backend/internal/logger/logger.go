@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
+	"github.com/Paulesma/starttech-application/internal/config"
 )
 
 // InitLogger initializes the global structured logger based on the application config.

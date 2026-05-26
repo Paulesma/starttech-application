@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
+	"github.com/Paulesma/starttech-application/internal/config"
 )
 
 // Cache defines the interface for a caching service.

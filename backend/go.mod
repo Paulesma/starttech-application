@@ -1,4 +1,4 @@
-module github.com/Innocent9712/much-to-do/Server/MuchToDo
+module github.com/Paulesma/starttech-application
 
 go 1.25.1
 

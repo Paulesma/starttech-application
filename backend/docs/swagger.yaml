@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  models.ChangePasswordDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.ChangePasswordDTO:
     properties:
       newPassword:
         minLength: 8
@@ -11,7 +11,7 @@ definitions:
     - newPassword
     - oldPassword
     type: object
-  models.CreateTodoDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.CreateTodoDTO:
     properties:
       description:
         type: string
@@ -20,7 +20,7 @@ definitions:
     required:
     - title
     type: object
-  models.LoginUserDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.LoginUserDTO:
     properties:
       password:
         type: string
@@ -30,7 +30,7 @@ definitions:
     - password
     - username
     type: object
-  models.PublicUser:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.PublicUser:
     properties:
       firstName:
         type: string
@@ -41,7 +41,7 @@ definitions:
       username:
         type: string
     type: object
-  models.RegisterUserDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.RegisterUserDTO:
     properties:
       firstName:
         type: string
@@ -59,7 +59,7 @@ definitions:
     - password
     - username
     type: object
-  models.Todo:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.Todo:
     properties:
       completed:
         type: boolean
@@ -79,7 +79,7 @@ definitions:
     required:
     - title
     type: object
-  models.UpdateTodoDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.UpdateTodoDTO:
     properties:
       completed:
         type: boolean
@@ -88,7 +88,7 @@ definitions:
       title:
         type: string
     type: object
-  models.UpdateUserDTO:
+  github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.UpdateUserDTO:
     properties:
       firstName:
         type: string
@@ -123,7 +123,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/models.LoginUserDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.LoginUserDTO'
       produces:
       - application/json
       responses:
@@ -179,7 +179,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.RegisterUserDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.RegisterUserDTO'
       produces:
       - application/json
       responses:
@@ -278,7 +278,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Todo'
+              $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.Todo'
             type: array
         "401":
           description: Unauthorized
@@ -307,14 +307,14 @@ paths:
         name: todo
         required: true
         schema:
-          $ref: '#/definitions/models.CreateTodoDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.CreateTodoDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Todo'
+            $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.Todo'
         "400":
           description: Invalid input
           schema:
@@ -400,7 +400,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Todo'
+            $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.Todo'
         "400":
           description: Invalid ID format
           schema:
@@ -445,7 +445,7 @@ paths:
         name: todo
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateTodoDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.UpdateTodoDTO'
       produces:
       - application/json
       responses:
@@ -523,7 +523,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.PublicUser'
+            $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.PublicUser'
         "401":
           description: Unauthorized
           schema:
@@ -558,7 +558,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateUserDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.UpdateUserDTO'
       produces:
       - application/json
       responses:
@@ -608,7 +608,7 @@ paths:
         name: passwords
         required: true
         schema:
-          $ref: '#/definitions/models.ChangePasswordDTO'
+          $ref: '#/definitions/github_com_Innocent9712_much-to-do_Server_MuchToDo_internal_models.ChangePasswordDTO'
       produces:
       - application/json
       responses:

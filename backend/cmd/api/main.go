@@ -3,7 +3,7 @@
 // @description     This is an API for MuchToDo application with user authentication.
 // @termsOfService  http://swagger.io/terms/
 // @contact.name   API Support - Innocent
-// @contact.url    https://github.com/Innocent9712
+// @contact.url    httpsgithub.com/Paulesma/starttech-application/Innocent9712
 // @contact.email  innocent@altschoolafrica.com
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
@@ -30,17 +30,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/auth"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/cache"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/database"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/handlers"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/logger"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/middleware"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/routes"
+	"github.com/Paulesma/starttech-application/internal/auth"
+	"github.com/Paulesma/starttech-application/internal/cache"
+	"github.com/Paulesma/starttech-application/internal/config"
+	"github.com/Paulesma/starttech-application/internal/database"
+	"github.com/Paulesma/starttech-application/internal/handlers"
+	"github.com/Paulesma/starttech-application/internal/logger"
+	"github.com/Paulesma/starttech-application/internal/middleware"
+	"github.com/Paulesma/starttech-application/internal/routes"
 
 	// Swagger imports
-	_ "github.com/Innocent9712/much-to-do/Server/MuchToDo/docs" // This is required for swag to find your docs
+	_ "github.com/Paulesma/starttech-application/docs" // This is required for swag to find your docs
 )
 
 const usernameCacheSentinelKey = "username_cache_initialized"
@@ -180,6 +180,8 @@ func setupRouter(db *mongo.Client, cfg config.Config, tokenSvc *auth.TokenServic
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
+
+
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Welcome to MuchToDo API"})

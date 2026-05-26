@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/auth"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/utils"
+	"github.com/Paulesma/starttech-application/internal/auth"
+	"github.com/Paulesma/starttech-application/internal/config"
+	"github.com/Paulesma/starttech-application/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 

@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/models"
+	"github.com/Paulesma/starttech-application/internal/models"
 )
 
 // TodoHandler holds the database collection for todos.

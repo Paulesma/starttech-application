@@ -7,10 +7,10 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/docs"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/handlers"
+	"github.com/Paulesma/starttech-application/docs"
+	"github.com/Paulesma/starttech-application/internal/handlers"
 
-	_ "github.com/Innocent9712/much-to-do/Server/MuchToDo/docs"
+	_ "github.com/Paulesma/starttech-application/docs"
 )
 
 // RegisterRoutes sets up all application routes.

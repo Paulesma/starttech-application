@@ -20,12 +20,12 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/auth"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/cache"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/database"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/logger"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/models"
+	"github.com/Paulesma/starttech-application/internal/auth"
+	"github.com/Paulesma/starttech-application/internal/cache"
+	"github.com/Paulesma/starttech-application/internal/config"
+	"github.com/Paulesma/starttech-application/internal/database"
+	"github.com/Paulesma/starttech-application/internal/logger"
+	"github.com/Paulesma/starttech-application/internal/models"
 )
 
 // UserHandlerIntegrationTestSuite is the suite for integration tests.

@@ -15,11 +15,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/auth"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/cache"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/config"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/models"
-	"github.com/Innocent9712/much-to-do/Server/MuchToDo/internal/utils"
+	"github.com/Paulesma/starttech-application/internal/auth"
+	"github.com/Paulesma/starttech-application/internal/cache"
+	"github.com/Paulesma/starttech-application/internal/config"
+	"github.com/Paulesma/starttech-application/internal/models"
+	"github.com/Paulesma/starttech-application/internal/utils"
 )
 
 // UserHandler holds dependencies for user-related handlers.
