@@ -62,3 +62,4 @@ jobs:
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name starttech-backend-asg \
             --preferences '{"MinHealthyPercentage": 50}'
+# test
