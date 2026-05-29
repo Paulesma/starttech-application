@@ -53,29 +53,53 @@ jobs:
 
       - name: Update Launch Template & Refresh ASG
         run: |
-          # 1. Get the Launch Template ID using your specific name
+          # 1. Get the Launch Template ID
           LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-          # 2. Encode the new UserData script to Base64 (Required for CLI)
-          # This script ensures the new instance pulls the exact image tag built in this run
+                    # 2. Encode the new UserData script
           USER_DATA=$(cat <<EOF | base64 -w 0
           #!/bin/bash
           sudo yum update -y
+          # Use yum/dnf directly for Amazon Linux 2023
           sudo yum install -y docker
           sudo systemctl start docker
+          sudo systemctl enable docker
+          
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          
           docker pull ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
-          docker run -d -p 80:8080 ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
+          
+          docker run -d \
+            --name backend \
+            -p 8080:8080 \
+            -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+            -e REDIS_URL="${{ secrets.REDIS_URL }}" \
+            -e PORT="8080" \
+            ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
           EOF
           )
 
-          # 3. Create a new version of the Launch Template with the updated UserData
+
+          # 3. CREATE THE NEW VERSION (Don't skip this!)
           aws ec2 create-launch-template-version \
             --launch-template-id $LT_ID \
             --source-version '$Latest' \
             --launch-template-data "{\"UserData\":\"$USER_DATA\"}"
             
-          # 4. Trigger the Refresh on your specific Auto Scaling Group
+          # 4. Trigger the Refresh
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name terraform-20260525134202399700000004 \
             --preferences '{"MinHealthyPercentage": 50}'
+      # ... (previous steps: Login, Build, Push, Update LT, Refresh ASG)
+
+      - name: Wait for Deployment & Run Health Check
+        run: |
+          # 1. Give the ASG a moment to start the refresh process
+          sleep 30
+          
+          # 2. Get the ALB DNS Name dynamically (More professional than hardcoding)
+          ALB_DNS=$(aws elbv2 describe-load-balancers --names backend-alb --query 'LoadBalancers[0].DNSName' --output text)
+          
+          # 3. Run your script
+          chmod +x ./scripts/health-check.sh
+          ./scripts/health-check.sh $ALB_DNS

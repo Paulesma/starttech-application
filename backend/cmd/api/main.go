@@ -177,9 +177,11 @@ func setupRouter(db *mongo.Client, cfg config.Config, tokenSvc *auth.TokenServic
 	routes.RegisterRoutes(router, userHandler, todoHandler, healthHandler, authMiddleware)
 
 	// A simple ping route for health checks
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	})
+	// Updated to match the "health endpoint" requirement
+router.GET("/health", func(c *gin.Context) {
+    c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+})
+
 
 
 

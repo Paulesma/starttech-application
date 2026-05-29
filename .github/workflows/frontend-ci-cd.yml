@@ -3,8 +3,7 @@ name: Frontend CI/CD
 on:
   push:
     branches: [ main, feature/full-stack ]
-  workflow_dispatch: # This line enables the manual "Run workflow" button
-
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -18,30 +17,38 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install and Build
+      - name: Install Dependencies
         working-directory: frontend
-        run: |
-          npm install
-          npm run build
+        run: npm install
+
+      # ADDED: Requirement for Security Scanning
+      - name: Security Scan (npm audit)
+        working-directory: frontend
+        run: npm audit --audit-level moderate
+
+      # ADDED: Requirement for Unit Tests
+      - name: Run Unit Tests
+        working-directory: frontend
+        run: npm test -- --watchAll=false
+
+      - name: Build Production Bundle
+        working-directory: frontend
+        run: npm run build
         env:
-          # This is critical so the React app knows where the API is
           VITE_API_BASE_URL: http://${{ secrets.ALB_DNS }}
 
+      # REFINED: Use official AWS action (Senior standard)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Deploy to S3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        run: |
-          aws s3 sync frontend/dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
+        run: aws s3 sync frontend/dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
       - name: Invalidate CloudFront Cache
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-
-
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
