@@ -4,8 +4,7 @@ on:
   push:
     branches: [ main, feature/full-stack ]
     paths: [ 'backend/**' ]
-  workflow_dispatch:  # <--- Add this exact line
-
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -20,9 +19,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Verify Identity
         run: aws sts get-caller-identity
-
 
       - name: Login to ECR
         id: login-ecr
@@ -41,7 +40,6 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:latest
           
-          # Output the image name for the next steps
           echo "image=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Security Scan (Trivy)
@@ -56,11 +54,10 @@ jobs:
           # 1. Get the Launch Template ID
           LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-                    # 2. Encode the new UserData script
+          # 2. Encode the new UserData script
           USER_DATA=$(cat <<EOF | base64 -w 0
           #!/bin/bash
           sudo yum update -y
-          # Use yum/dnf directly for Amazon Linux 2023
           sudo yum install -y docker
           sudo systemctl start docker
           sudo systemctl enable docker
@@ -79,27 +76,25 @@ jobs:
           EOF
           )
 
-
-          # 3. CREATE THE NEW VERSION (Don't skip this!)
+          # 3. Create the new Launch Template version
           aws ec2 create-launch-template-version \
             --launch-template-id $LT_ID \
             --source-version '$Latest' \
             --launch-template-data "{\"UserData\":\"$USER_DATA\"}"
             
-          # 4. Trigger the Refresh
+          # 4. Trigger the Refresh using the correct ASG name
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name terraform-20260525134202399700000004 \
+            --auto-scaling-group-name backend-asg \
             --preferences '{"MinHealthyPercentage": 50}'
-      # ... (previous steps: Login, Build, Push, Update LT, Refresh ASG)
 
       - name: Wait for Deployment & Run Health Check
         run: |
-          # 1. Give the ASG a moment to start the refresh process
-          sleep 30
+          # Give the ASG a moment to start the refresh process
+          sleep 60
           
-          # 2. Get the ALB DNS Name dynamically (More professional than hardcoding)
+          # Get the ALB DNS Name dynamically
           ALB_DNS=$(aws elbv2 describe-load-balancers --names backend-alb --query 'LoadBalancers[0].DNSName' --output text)
           
-          # 3. Run your script
+          # Run health check
           chmod +x ./scripts/health-check.sh
           ./scripts/health-check.sh $ALB_DNS
