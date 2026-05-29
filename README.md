@@ -42,4 +42,4 @@ To run the pipelines, configure the following secrets in this repository:
 Refer to the [RUNBOOK.md](./RUNBOOK.md) for detailed incident response, CloudWatch Log Insight queries, and scaling procedures.
 
 ## 👨‍💻 Author
-**Eze Paul C** - Senior DevOps Engineer
+**Eze Paul C** - Senior DevOps Engineer.
