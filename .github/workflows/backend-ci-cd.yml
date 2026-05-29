@@ -54,18 +54,27 @@ jobs:
           # 1. Get the Launch Template ID
           LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-          # 2. Encode the new UserData script
+          # 2. Encode the new UserData script (Updated for Ubuntu 24.04)
           USER_DATA=$(cat <<EOF | base64 -w 0
           #!/bin/bash
-          sudo yum update -y
-          sudo yum install -y docker
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io
           sudo systemctl start docker
           sudo systemctl enable docker
           
+          # Add ubuntu user to docker group so it can run without sudo if needed
+          sudo usermod -aG docker ubuntu
+          
+          # Login to ECR
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
           
+          # Pull and Run the specific tag from this commit
           docker pull ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
           
+          # Stop and remove existing container if it exists (for robustness)
+          docker stop backend || true
+          docker rm backend || true
+
           docker run -d \
             --name backend \
             -p 8080:8080 \
@@ -82,15 +91,15 @@ jobs:
             --source-version '$Latest' \
             --launch-template-data "{\"UserData\":\"$USER_DATA\"}"
             
-          # 4. Trigger the Refresh using the correct ASG name
+          # 4. Trigger the Refresh
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name backend-asg \
             --preferences '{"MinHealthyPercentage": 50}'
 
       - name: Wait for Deployment & Run Health Check
         run: |
-          # Give the ASG a moment to start the refresh process
-          sleep 60
+          # Increased sleep to allow Ubuntu time to install docker and pull image
+          sleep 90
           
           # Get the ALB DNS Name dynamically
           ALB_DNS=$(aws elbv2 describe-load-balancers --names backend-alb --query 'LoadBalancers[0].DNSName' --output text)
