@@ -54,7 +54,7 @@ jobs:
           # 1. Get the Launch Template ID
           LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-          # 2. Encode the new UserData script (Optimized for Ubuntu 24.04 Automation)
+          # 2. Encode the new UserData script (Optimized for Ubuntu 24.04)
           USER_DATA=$(cat <<EOF | base64 -w 0
           #!/bin/bash
           export DEBIAN_FRONTEND=noninteractive
@@ -75,7 +75,7 @@ jobs:
           # Pull the specific tag from this commit
           docker pull ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
           
-          # Stop and remove existing container if it exists
+          # SENIOR FIX: Stop and remove existing container by name to avoid port/name conflicts
           docker rm -f backend || true
 
           # Run the container
@@ -102,10 +102,10 @@ jobs:
 
       - name: Wait for Deployment & Run Health Check
         run: |
-          # Increased sleep to 4 minutes for first-time package installation
+          # 4-minute wait for Ubuntu package installation and ECR pull
           sleep 240
           
-          # Get the ALB DNS Name
+          # Get the ALB DNS Name dynamically
           ALB_DNS=$(aws elbv2 describe-load-balancers --names backend-alb --query 'LoadBalancers[0].DNSName' --output text)
           
           # Run health check
