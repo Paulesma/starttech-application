@@ -54,27 +54,31 @@ jobs:
           # 1. Get the Launch Template ID
           LT_ID=$(aws ec2 describe-launch-templates --launch-template-names backend-lt-20260525134148455300000001 --query 'LaunchTemplates[0].LaunchTemplateId' --output text)
           
-          # 2. Encode the new UserData script (Updated for Ubuntu 24.04)
+          # 2. Encode the new UserData script (Optimized for Ubuntu 24.04 Automation)
           USER_DATA=$(cat <<EOF | base64 -w 0
           #!/bin/bash
+          export DEBIAN_FRONTEND=noninteractive
+          
+          # Update and install dependencies
           sudo apt-get update -y
-          sudo apt-get install -y docker.io
+          sudo apt-get install -y docker.io awscli
+          
           sudo systemctl start docker
           sudo systemctl enable docker
           
-          # Add ubuntu user to docker group so it can run without sudo if needed
+          # Add ubuntu user to docker group
           sudo usermod -aG docker ubuntu
           
           # Login to ECR
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
           
-          # Pull and Run the specific tag from this commit
+          # Pull the specific tag from this commit
           docker pull ${{ steps.login-ecr.outputs.registry }}/starttech-backend:${{ github.sha }}
           
-          # Stop and remove existing container if it exists (for robustness)
-          docker stop backend || true
-          docker rm backend || true
+          # Stop and remove existing container if it exists
+          docker rm -f backend || true
 
+          # Run the container
           docker run -d \
             --name backend \
             -p 8080:8080 \
@@ -98,10 +102,10 @@ jobs:
 
       - name: Wait for Deployment & Run Health Check
         run: |
-          # Increased sleep to allow Ubuntu time to install docker and pull image
-          sleep 90
+          # Increased sleep to 4 minutes for first-time package installation
+          sleep 240
           
-          # Get the ALB DNS Name dynamically
+          # Get the ALB DNS Name
           ALB_DNS=$(aws elbv2 describe-load-balancers --names backend-alb --query 'LoadBalancers[0].DNSName' --output text)
           
           # Run health check
